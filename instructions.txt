@@ -1,0 +1,48 @@
+Project 2: Finance Data (Real-Time + Analytics for London Financial Sector)
+
+Business story:
+"Built a real-time financial market data streaming and analytics platform simulating a solution for London-based fintechs and trading firms. The pipeline provided second-level updates on prices, risk exposure, and portfolio P&L across multiple sources."
+
+🔹 Architecture
+
+Finance Data Streaming Project (Real-time Analytics)
+
+Concept:
+
+Source = real-time finance API (e.g., Yahoo Finance, Polygon.io, Alpha Vantage).
+
+Ingestion = Python service pulling live ticks into Kafka.
+
+Processing =
+
+On-prem: Spark streaming job from Kafka.
+
+Cloud: Managed Kafka (Confluent/AWS MSK) + Spark/Flink in Databricks/EMR.
+
+Storage =
+
+Real-time OLTP layer: Postgres/TimescaleDB (for fast queries).
+
+Analytics: Delta Lake or Snowflake.
+
+Tech Stack Design:
+
+Kafka → Spark/Flink for processing ticks.
+
+TimescaleDB for real-time finance metrics.
+
+Delta Lake/Iceberg/Snowflake for analytical queries and historical retention.
+
+Airflow for daily summarization jobs.
+
+DBT for transformations into fact/dim tables.
+
+BI Layer – dashboard of stock movements, alerts, etc.
+
+Scalability Considerations:
+
+Modular services = new tech (Iceberg, Flink) can slot in without redesign.
+
+Start with 1-minute sampled ticks; scale to millions by replaying API streams into Kafka.
+
+Containerize ingestion separately → scale horizontally if more symbols/exchanges are added.
