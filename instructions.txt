@@ -3,7 +3,7 @@ Project 2: Finance Data (Real-Time + Analytics for London Financial Sector)
 Business story:
 "Built a real-time financial market data streaming and analytics platform simulating a solution for London-based fintechs and trading firms. The pipeline provided second-level updates on prices, risk exposure, and portfolio P&L across multiple sources."
 
-🔹 Architecture
+- Architecture
 
 Finance Data Streaming Project (Real-time Analytics)
 

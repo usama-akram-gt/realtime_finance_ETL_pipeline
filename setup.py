@@ -17,14 +17,14 @@ console = Console()
 def print_header():
     """Print setup header."""
     console.print(Panel.fit(
-        "🚀 Finance Data Pipeline Setup\n"
+        "Finance Data Pipeline Setup\n"
         "Airflow + Spark + DBT + Great Expectations + Kafka + PostgreSQL",
         style="blue"
     ))
 
 def check_prerequisites():
     """Check if required tools are installed."""
-    console.print("🔍 Checking prerequisites...", style="yellow")
+    console.print("Checking prerequisites...", style="yellow")
     
     tools = [
         ("Docker", "docker --version"),
@@ -38,35 +38,35 @@ def check_prerequisites():
         try:
             result = subprocess.run(command.split(), capture_output=True, text=True)
             if result.returncode == 0:
-                console.print(f"✅ {tool}: {result.stdout.strip()}", style="green")
+                console.print(f"[OK] {tool}: {result.stdout.strip()}", style="green")
             else:
                 missing.append(tool)
         except FileNotFoundError:
             missing.append(tool)
     
     if missing:
-        console.print(f"❌ Missing tools: {', '.join(missing)}", style="red")
+        console.print(f"[ERROR] Missing tools: {', '.join(missing)}", style="red")
         return False
     
     return True
 
 def install_python_dependencies():
     """Install Python dependencies."""
-    console.print("📦 Installing Python dependencies...", style="yellow")
+    console.print("Installing Python dependencies...", style="yellow")
     
     try:
         subprocess.run([
             sys.executable, "-m", "pip", "install", "-r", "requirements.txt"
         ], check=True)
-        console.print("✅ Python dependencies installed", style="green")
+        console.print("[OK] Python dependencies installed", style="green")
         return True
     except subprocess.CalledProcessError as e:
-        console.print(f"❌ Failed to install dependencies: {e}", style="red")
+        console.print(f"[ERROR] Failed to install dependencies: {e}", style="red")
         return False
 
 def start_infrastructure():
     """Start infrastructure services."""
-    console.print("🚀 Starting infrastructure services...", style="yellow")
+    console.print("Starting infrastructure services...", style="yellow")
     
     try:
         # Stop any existing services
@@ -79,10 +79,10 @@ def start_infrastructure():
             "docker-compose", "up", "-d"
         ], check=True)
         
-        console.print("✅ Infrastructure services started", style="green")
+        console.print("[OK] Infrastructure services started", style="green")
         return True
     except subprocess.CalledProcessError as e:
-        console.print(f"❌ Failed to start services: {e}", style="red")
+        console.print(f"[ERROR] Failed to start services: {e}", style="red")
         return False
 
 def wait_for_services():
@@ -111,17 +111,17 @@ def wait_for_services():
                     result = sock.connect_ex((host, int(port)))
                     sock.close()
                     if result == 0:
-                        console.print(f"  ✅ {service_name} is ready", style="green")
+                        console.print(f"  [OK] {service_name} is ready", style="green")
                         break
                 time.sleep(5)
             except:
                 pass
         else:
-            console.print(f"  ⚠️  {service_name} may not be ready", style="yellow")
+            console.print(f"  [WARNING] {service_name} may not be ready", style="yellow")
 
 def setup_airflow():
     """Initialize Airflow."""
-    console.print("🔧 Setting up Airflow...", style="yellow")
+    console.print("Setting up Airflow...", style="yellow")
     
     try:
         # Wait for Airflow to be ready
@@ -145,15 +145,15 @@ def setup_airflow():
             "--password", "admin123"
         ], check=True)
         
-        console.print("✅ Airflow initialized", style="green")
+        console.print("[OK] Airflow initialized", style="green")
         return True
     except subprocess.CalledProcessError as e:
-        console.print(f"❌ Airflow setup failed: {e}", style="red")
+        console.print(f"[ERROR] Airflow setup failed: {e}", style="red")
         return False
 
 def setup_dbt():
     """Initialize DBT project."""
-    console.print("🔧 Setting up DBT...", style="yellow")
+    console.print("Setting up DBT...", style="yellow")
     
     try:
         # Create .dbt directory
@@ -162,42 +162,42 @@ def setup_dbt():
         # Copy profiles.yml to .dbt directory
         if os.path.exists("src/dbt/profiles.yml"):
             subprocess.run(["cp", "src/dbt/profiles.yml", ".dbt/"], check=True)
-            console.print("✅ DBT profiles configured", style="green")
+            console.print("[OK] DBT profiles configured", style="green")
         
         # Test DBT connection from dbt directory
         subprocess.run(["dbt", "debug"], cwd="src/dbt", check=True)
-        console.print("✅ DBT project initialized", style="green")
+        console.print("[OK] DBT project initialized", style="green")
         return True
         
     except subprocess.CalledProcessError as e:
-        console.print(f"❌ DBT setup failed: {e}", style="red")
+        console.print(f"[ERROR] DBT setup failed: {e}", style="red")
         return False
 
 def setup_great_expectations():
     """Initialize Great Expectations."""
-    console.print("🔧 Setting up Great Expectations...", style="yellow")
+    console.print("Setting up Great Expectations...", style="yellow")
     
     try:
         subprocess.run(["great_expectations", "init"], cwd="src/great_expectations", check=True)
-        console.print("✅ Great Expectations initialized", style="green")
+        console.print("[OK] Great Expectations initialized", style="green")
         return True
     except subprocess.CalledProcessError as e:
-        console.print(f"❌ Great Expectations setup failed: {e}", style="red")
+        console.print(f"[ERROR] Great Expectations setup failed: {e}", style="red")
         return False
 
 def test_pipeline():
     """Test the complete pipeline."""
-    console.print("🧪 Testing pipeline...", style="yellow")
+    console.print("Testing pipeline...", style="yellow")
     
     try:
         # Run the test pipeline
         subprocess.run([
             sys.executable, "test_pipeline.py"
         ], check=True)
-        console.print("✅ Pipeline test completed", style="green")
+        console.print("[OK] Pipeline test completed", style="green")
         return True
     except subprocess.CalledProcessError as e:
-        console.print(f"❌ Pipeline test failed: {e}", style="red")
+        console.print(f"[ERROR] Pipeline test failed: {e}", style="red")
         return False
 
 def show_service_status():
@@ -208,7 +208,7 @@ def show_service_status():
         ], capture_output=True, text=True)
         
         if result.returncode == 0:
-            console.print("\n📊 Service Status:", style="blue")
+            console.print("\nService Status:", style="blue")
             console.print(result.stdout)
     except:
         pass
@@ -232,7 +232,7 @@ def show_urls():
 
 def show_next_steps():
     """Show next steps for the user."""
-    console.print("\n🎯 Setup Complete! Next Steps:", style="green")
+    console.print("\nSetup Complete! Next Steps:", style="green")
     
     table = Table(title="Next Steps")
     table.add_column("Step", style="cyan")
@@ -277,33 +277,33 @@ def main():
     print_header()
     
     if not check_prerequisites():
-        console.print("❌ Prerequisites not met. Please install missing tools.", style="red")
+        console.print("[ERROR] Prerequisites not met. Please install missing tools.", style="red")
         return
     
     if not install_python_dependencies():
-        console.print("❌ Failed to install Python dependencies.", style="red")
+        console.print("[ERROR] Failed to install Python dependencies.", style="red")
         return
     
     if not start_infrastructure():
-        console.print("❌ Failed to start infrastructure.", style="red")
+        console.print("[ERROR] Failed to start infrastructure.", style="red")
         return
     
     wait_for_services()
     
     if not setup_airflow():
-        console.print("❌ Failed to setup Airflow.", style="red")
+        console.print("[ERROR] Failed to setup Airflow.", style="red")
         return
     
     if not setup_dbt():
-        console.print("❌ Failed to setup DBT.", style="red")
+        console.print("[ERROR] Failed to setup DBT.", style="red")
         return
     
     if not setup_great_expectations():
-        console.print("❌ Failed to setup Great Expectations.", style="red")
+        console.print("[ERROR] Failed to setup Great Expectations.", style="red")
         return
     
     if not test_pipeline():
-        console.print("❌ Pipeline test failed.", style="red")
+        console.print("[ERROR] Pipeline test failed.", style="red")
         return
     
     show_service_status()
