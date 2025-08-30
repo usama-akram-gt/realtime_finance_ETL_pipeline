@@ -1,0 +1,208 @@
+version: '3.8'
+
+services:
+  # Zookeeper (required for Kafka)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
+    networks:
+      - finance-network
+
+  # Kafka
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - finance-network
+
+  # PostgreSQL (will be enhanced with TimescaleDB)
+  postgres:
+    image: postgres:14-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_DB: finance_data
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - finance-network
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - finance-network
+
+  # Apache Spark Master
+  spark-master:
+    image: bitnami/spark:3.5
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    volumes:
+      - spark-data:/opt/bitnami/spark
+    networks:
+      - finance-network
+
+  # Apache Spark Worker
+  spark-worker:
+    image: bitnami/spark:3.5
+    container_name: spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    depends_on:
+      - spark-master
+    volumes:
+      - spark-data:/opt/bitnami/spark
+    networks:
+      - finance-network
+
+  # Apache Airflow PostgreSQL
+  airflow-postgres:
+    image: postgres:13
+    container_name: airflow-postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-postgres-data:/var/lib/postgresql/data
+    networks:
+      - finance-network
+
+  # Apache Airflow Redis
+  airflow-redis:
+    image: redis:7-alpine
+    container_name: airflow-redis
+    networks:
+      - finance-network
+
+  # Apache Airflow Webserver
+  airflow-webserver:
+    image: apache/airflow:2.8.1
+    container_name: airflow-webserver
+    depends_on:
+      - airflow-postgres
+      - airflow-redis
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://:@airflow-redis:6379/0
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth'
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./src/airflow/dags:/opt/airflow/dags
+      - ./src/airflow/logs:/opt/airflow/logs
+      - ./src/airflow/plugins:/opt/airflow/plugins
+      - ./src:/opt/airflow/src
+    networks:
+      - finance-network
+
+  # Apache Airflow Scheduler
+  airflow-scheduler:
+    image: apache/airflow:2.8.1
+    container_name: airflow-scheduler
+    depends_on:
+      - airflow-webserver
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://:@airflow-redis:6379/0
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./src/airflow/dags:/opt/airflow/dags
+      - ./src/airflow/logs:/opt/airflow/logs
+      - ./src/airflow/plugins:/opt/airflow/plugins
+      - ./src:/opt/airflow/src
+    networks:
+      - finance-network
+
+  # Apache Airflow Worker
+  airflow-worker:
+    image: apache/airflow:2.8.1
+    container_name: airflow-worker
+    depends_on:
+      - airflow-scheduler
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://:@airflow-redis:6379/0
+      AIRFLOW__CORE__FERNET_KEY: ''
+    volumes:
+      - ./src/airflow/dags:/opt/airflow/dags
+      - ./src/airflow/logs:/opt/airflow/logs
+      - ./src/airflow/plugins:/opt/airflow/plugins
+      - ./src:/opt/airflow/src
+    networks:
+      - finance-network
+
+volumes:
+  zookeeper-data:
+  zookeeper-logs:
+  kafka-data:
+  postgres-data:
+  redis-data:
+  spark-data:
+  airflow-postgres-data:
+
+networks:
+  finance-network:
+    driver: bridge
