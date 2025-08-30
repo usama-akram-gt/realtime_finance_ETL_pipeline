@@ -1,0 +1,26 @@
+finance_data_platform:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      user: postgres
+      password: ""
+      port: 5432
+      dbname: postgres
+      schema: finance_data
+      threads: 4
+      keepalives_idle: 0
+      search_path: finance_data
+      
+    prod:
+      type: postgres
+      host: localhost
+      user: postgres
+      password: ""
+      port: 5432
+      dbname: postgres
+      schema: finance_data
+      threads: 8
+      keepalives_idle: 0
+      search_path: finance_data
