@@ -111,14 +111,18 @@ class FinanceDataPlatform:
                 
                 self.logger.info("Yahoo Finance ingestion services registered")
             
-            # TODO: Add other ingestion services (Polygon, Alpha Vantage)
-            # if settings.api.polygon_enabled:
-            #     polygon_service = PolygonIngestion(settings.symbols)
-            #     self.ingestion_manager.register_service(polygon_service)
+            # Add other ingestion services (Polygon, Alpha Vantage)
+            if hasattr(settings.api, 'polygon_enabled') and settings.api.polygon_enabled:
+                from src.ingestion.polygon import PolygonIngestion
+                polygon_service = PolygonIngestion(settings.symbols)
+                self.ingestion_manager.register_service(polygon_service)
+                self.logger.info("Polygon ingestion service registered")
             
-            # if settings.api.alpha_vantage_enabled:
-            #     alpha_service = AlphaVantageIngestion(settings.symbols)
-            #     self.ingestion_manager.register_service(alpha_service)
+            if hasattr(settings.api, 'alpha_vantage_enabled') and settings.api.alpha_vantage_enabled:
+                from src.ingestion.alpha_vantage import AlphaVantageIngestion
+                alpha_service = AlphaVantageIngestion(settings.symbols)
+                self.ingestion_manager.register_service(alpha_service)
+                self.logger.info("Alpha Vantage ingestion service registered")
             
         except Exception as e:
             self.logger.error("Failed to setup ingestion services", error=str(e))

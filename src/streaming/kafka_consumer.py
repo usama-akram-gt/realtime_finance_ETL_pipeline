@@ -153,11 +153,26 @@ class KafkaConsumerService:
         self.metrics.increment_counter("tick_data_processed", 
                                      labels={"symbol": tick_data.symbol, "source": tick_data.source.value})
         
-        # TODO: Add real-time processing logic
-        # - Calculate technical indicators
-        # - Update portfolio positions
-        # - Generate alerts
-        # - Store in database
+        # Real-time processing logic
+        try:
+            # Calculate basic technical indicators
+            self._calculate_tick_indicators(tick_data)
+            
+            # Update portfolio positions (if applicable)
+            self._update_portfolio_positions(tick_data)
+            
+            # Generate alerts for significant price movements
+            self._check_price_alerts(tick_data)
+            
+            # Store in database
+            self._store_tick_data(tick_data)
+            
+        except Exception as e:
+            self.logger.error("Failed to process tick data", 
+                            symbol=tick_data.symbol, 
+                            error=str(e))
+            self.metrics.increment_counter("tick_processing_errors", 
+                                         labels={"symbol": tick_data.symbol})
     
     def _handle_ohlcv_data(self, ohlcv_data: OHLCVData) -> None:
         """
@@ -175,10 +190,26 @@ class KafkaConsumerService:
         self.metrics.increment_counter("ohlcv_data_processed", 
                                      labels={"symbol": ohlcv_data.symbol, "period": ohlcv_data.period})
         
-        # TODO: Add OHLCV processing logic
-        # - Calculate moving averages
-        # - Detect patterns
-        # - Update analytics
+        # OHLCV processing logic
+        try:
+            # Calculate moving averages
+            self._calculate_moving_averages(ohlcv_data)
+            
+            # Detect chart patterns
+            self._detect_chart_patterns(ohlcv_data)
+            
+            # Update analytics and metrics
+            self._update_analytics(ohlcv_data)
+            
+            # Store OHLCV data
+            self._store_ohlcv_data(ohlcv_data)
+            
+        except Exception as e:
+            self.logger.error("Failed to process OHLCV data", 
+                            symbol=ohlcv_data.symbol, 
+                            error=str(e))
+            self.metrics.increment_counter("ohlcv_processing_errors", 
+                                         labels={"symbol": ohlcv_data.symbol})
     
     def _process_alert_event(self, alert_data: Dict[str, Any]) -> None:
         """
@@ -196,10 +227,23 @@ class KafkaConsumerService:
         self.metrics.increment_counter("alerts_processed", 
                                      labels={"alert_type": alert_data.get("alert_type", "unknown")})
         
-        # TODO: Add alert processing logic
-        # - Send notifications
-        # - Update alert status
-        # - Trigger actions
+        # Alert processing logic
+        try:
+            # Send notifications based on alert type
+            self._send_alert_notifications(alert_data)
+            
+            # Update alert status in database
+            self._update_alert_status(alert_data)
+            
+            # Trigger automated actions
+            self._trigger_alert_actions(alert_data)
+            
+        except Exception as e:
+            self.logger.error("Failed to process alert", 
+                            alert_type=alert_data.get("alert_type"), 
+                            error=str(e))
+            self.metrics.increment_counter("alert_processing_errors", 
+                                         labels={"alert_type": alert_data.get("alert_type", "unknown")})
     
     def _process_metrics_event(self, metrics_data: Dict[str, Any]) -> None:
         """
@@ -214,9 +258,23 @@ class KafkaConsumerService:
         self.metrics.increment_counter("metrics_processed", 
                                      labels={"metrics_type": metrics_data.get("type", "unknown")})
         
-        # TODO: Add metrics processing logic
-        # - Update dashboards
-        # - Trigger alerts
+        # Metrics processing logic
+        try:
+            # Update real-time dashboards
+            self._update_dashboard_metrics(metrics_data)
+            
+            # Trigger alerts for metric thresholds
+            self._check_metric_thresholds(metrics_data)
+            
+            # Store metrics for historical analysis
+            self._store_metrics_data(metrics_data)
+            
+        except Exception as e:
+            self.logger.error("Failed to process metrics", 
+                            metrics_type=metrics_data.get("type"), 
+                            error=str(e))
+            self.metrics.increment_counter("metrics_processing_errors", 
+                                         labels={"metrics_type": metrics_data.get("type", "unknown")})
         # - Store for analysis
     
     async def start_consuming(self) -> None:
@@ -322,3 +380,79 @@ class KafkaConsumerService:
         except Exception as e:
             self.logger.error("Kafka consumer health check failed", error=str(e))
             return False
+    
+    # Helper methods for processing logic
+    
+    def _calculate_tick_indicators(self, tick_data: TickData) -> None:
+        """Calculate basic technical indicators for tick data."""
+        # Placeholder for technical indicator calculations
+        # In a real implementation, this would calculate RSI, MACD, etc.
+        self.logger.debug("Calculating tick indicators", symbol=tick_data.symbol)
+    
+    def _update_portfolio_positions(self, tick_data: TickData) -> None:
+        """Update portfolio positions based on tick data."""
+        # Placeholder for portfolio position updates
+        # In a real implementation, this would update P&L, positions, etc.
+        self.logger.debug("Updating portfolio positions", symbol=tick_data.symbol)
+    
+    def _check_price_alerts(self, tick_data: TickData) -> None:
+        """Check for price movement alerts."""
+        # Placeholder for price alert logic
+        # In a real implementation, this would check thresholds and generate alerts
+        self.logger.debug("Checking price alerts", symbol=tick_data.symbol)
+    
+    def _store_tick_data(self, tick_data: TickData) -> None:
+        """Store tick data in database."""
+        # Placeholder for database storage
+        # In a real implementation, this would insert into PostgreSQL
+        self.logger.debug("Storing tick data", symbol=tick_data.symbol)
+    
+    def _calculate_moving_averages(self, ohlcv_data: OHLCVData) -> None:
+        """Calculate moving averages for OHLCV data."""
+        # Placeholder for moving average calculations
+        self.logger.debug("Calculating moving averages", symbol=ohlcv_data.symbol)
+    
+    def _detect_chart_patterns(self, ohlcv_data: OHLCVData) -> None:
+        """Detect chart patterns in OHLCV data."""
+        # Placeholder for pattern detection
+        self.logger.debug("Detecting chart patterns", symbol=ohlcv_data.symbol)
+    
+    def _update_analytics(self, ohlcv_data: OHLCVData) -> None:
+        """Update analytics and metrics."""
+        # Placeholder for analytics updates
+        self.logger.debug("Updating analytics", symbol=ohlcv_data.symbol)
+    
+    def _store_ohlcv_data(self, ohlcv_data: OHLCVData) -> None:
+        """Store OHLCV data in database."""
+        # Placeholder for database storage
+        self.logger.debug("Storing OHLCV data", symbol=ohlcv_data.symbol)
+    
+    def _send_alert_notifications(self, alert_data: Dict[str, Any]) -> None:
+        """Send alert notifications."""
+        # Placeholder for notification sending
+        self.logger.debug("Sending alert notifications", alert_type=alert_data.get("alert_type"))
+    
+    def _update_alert_status(self, alert_data: Dict[str, Any]) -> None:
+        """Update alert status in database."""
+        # Placeholder for alert status updates
+        self.logger.debug("Updating alert status", alert_type=alert_data.get("alert_type"))
+    
+    def _trigger_alert_actions(self, alert_data: Dict[str, Any]) -> None:
+        """Trigger automated actions based on alerts."""
+        # Placeholder for automated actions
+        self.logger.debug("Triggering alert actions", alert_type=alert_data.get("alert_type"))
+    
+    def _update_dashboard_metrics(self, metrics_data: Dict[str, Any]) -> None:
+        """Update real-time dashboard metrics."""
+        # Placeholder for dashboard updates
+        self.logger.debug("Updating dashboard metrics", metrics_type=metrics_data.get("type"))
+    
+    def _check_metric_thresholds(self, metrics_data: Dict[str, Any]) -> None:
+        """Check metric thresholds and trigger alerts."""
+        # Placeholder for threshold checking
+        self.logger.debug("Checking metric thresholds", metrics_type=metrics_data.get("type"))
+    
+    def _store_metrics_data(self, metrics_data: Dict[str, Any]) -> None:
+        """Store metrics data for historical analysis."""
+        # Placeholder for metrics storage
+        self.logger.debug("Storing metrics data", metrics_type=metrics_data.get("type"))
